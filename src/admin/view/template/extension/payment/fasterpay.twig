@@ -1,0 +1,139 @@
+{{ header }} {{ column_left }} 
+<div id="content">
+    <div class="page-header">
+        <div class="container-fluid">
+            <div class="pull-right">
+                <button type="submit" form="form-payment" data-toggle="tooltip" title="{{ button_save }} "
+                        class="btn btn-primary"><i class="fa fa-save"></i></button>
+                <a href="{{ cancel }} " data-toggle="tooltip" title="{{ button_cancel }} "
+                   class="btn btn-default"><i class="fa fa-reply"></i></a></div>
+            <h1>{{ heading_title }} </h1>
+            <ul class="breadcrumb">
+                {% for breadcrumb in breadcrumbs %} 
+                <li><a href="{{ breadcrumb.href }} ">{{ breadcrumb.text }} </a></li>
+                {% endfor %} 
+            </ul>
+        </div>
+    </div>
+    <div class="container-fluid">
+        {% if error_warning %}
+        <div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> {{ error_warning }} 
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+        </div>
+        {% endif %} 
+        <div class="panel panel-default">
+            <!--BEGIN HEADING-->
+            <div class="panel-heading">
+                <h3 class="panel-title"><i class="fa fa-pencil"></i> {{ text_edit }} </h3>
+            </div>
+            <!--END HEADING-->
+            <div class="panel-body">
+
+                <form action="{{ action }} " method="post" enctype="multipart/form-data" id="form-fasterpay"
+                      class="form-horizontal">
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label"
+                               for="payment_fasterpay_public_key">{{ entry_public_key }} </label>
+
+                        <div class="col-sm-10">
+                            <input type="text" name="payment_fasterpay_public_key" value="{{ payment_fasterpay_public_key }}"
+                                   id="payment_fasterpay_public_key" class="form-control"/>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label"
+                               for="payment_fasterpay_private_key">{{ entry_private_key }} </label>
+
+                        <div class="col-sm-10">
+                            <input type="text" name="payment_fasterpay_private_key" value="{{ payment_fasterpay_private_key }}"
+                                   id="payment_fasterpay_private_key" class="form-control"/>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="payment_fasterpay_complete_status">{{ entry_complete_status }} </label>
+                        <div class="col-sm-10">
+                            <select name="payment_fasterpay_complete_status" id="payment_fasterpay_complete_status" class="form-control">
+                                {% for key, value in statuses %}  
+                                <option value="{{ key }}"
+                                {% if key == payment_fasterpay_complete_status %} selected="selected" {% endif %} >
+                                {{ value }} 
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="payment_fasterpay_test_mode">{{ entry_test }} </label>
+
+                        <div class="col-sm-10">
+                            {% if payment_fasterpay_test_mode %} 
+                            <input type="radio" name="payment_fasterpay_test_mode" value="1" checked="checked"/>
+                            {{ text_enabled }} 
+                            <input type="radio" name="payment_fasterpay_test_mode" value="0"/>
+                            {{ text_disabled }} 
+                            {% else %}   
+                            <input type="radio" name="payment_fasterpay_test_mode" value="1"/>
+                            {{ text_enabled }} 
+                            <input type="radio" name="payment_fasterpay_test_mode" value="0" checked="checked"/>
+                            {{ text_disabled }} 
+                            {% endif %} 
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label"
+                               for="payment_fasterpay_success_url">{{ entry_success_url }} </label>
+
+                        <div class="col-sm-10">
+                            <input type="text" name="payment_fasterpay_success_url" value="{{ payment_fasterpay_success_url }}"
+                                   id="payment_fasterpay_success_url" class="form-control"/>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label"
+                               for="payment_fasterpay_pingback_url">{{ entry_pingback_url }} </label>
+
+                        <div class="col-sm-10">
+                            <input type="text" name="payment_fasterpay_pingback_url" value="{{ payment_fasterpay_pingback_url }}"
+                                   id="payment_fasterpay_pingback_url" class="form-control"/>
+                            <p class="help-block">{{ text_pingback_url_hint }} <a href="{{ default_pingback_url }}" target="_blank">{{ default_pingback_url }}</a></p>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label"
+                               for="payment_fasterpay_sort_order">{{ entry_sort_order }} </label>
+
+                        <div class="col-sm-10">
+                            <input type="text" name="payment_fasterpay_sort_order"
+                                   value="{{ payment_fasterpay_sort_order }} "
+                                   id="payment_fasterpay_sort_order" class="form-control"/>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label"
+                               for="payment_fasterpay_status">{{ entry_active }} </label>
+
+                        <div class="col-sm-10">
+                            <select name="payment_fasterpay_status" class="form-control">
+                                {% if payment_fasterpay_status %} 
+                                <option value="0">{{ text_disabled }} </option>
+                                <option value="1" selected="selected">{{ text_enabled }} </option>
+                                {% else %}   
+                                <option value="0" selected="selected">{{ text_disabled }} </option>
+                                <option value="1">{{ text_enabled }} </option>
+                                {% endif %} 
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{{ footer }} 
