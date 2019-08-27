@@ -11,7 +11,7 @@
 class ControllerExtensionPaymentFasterPay extends Controller
 {
     private $error = [];
-    const ORDER_REFUNED_STATUS_ID = 11;
+    const ORDER_REFUNDED_STATUS_ID = 11;
     const PAYMENT_METHOD = 'FasterPay';
 
     // Generate default configs
@@ -76,7 +76,7 @@ class ControllerExtensionPaymentFasterPay extends Controller
 
             if ($order
                 && $order['order_status_id']
-                && $order['order_status_id'] != self::ORDER_REFUNED_STATUS_ID
+                && $order['order_status_id'] != self::ORDER_REFUNDED_STATUS_ID
                 && $order['payment_method'] == self::PAYMENT_METHOD
                 && $order['payment_code'] == strtolower(self::PAYMENT_METHOD)) {
 
@@ -124,7 +124,7 @@ class ControllerExtensionPaymentFasterPay extends Controller
                 $refundResponse = $gateway->paymentService()->refund($transactionId, $amount);
 
                 if ($refundResponse->isSuccessful()) {
-                    $response = $this->addOrderHistory($orderId, self::ORDER_REFUNED_STATUS_ID, 'Refuned ' . $amount . ' ' . $order['currency_code'], $order['store_id']);
+                    $response = $this->addOrderHistory($orderId, self::ORDER_REFUNDED_STATUS_ID, 'Refunded ' . $amount . ' ' . $order['currency_code'], $order['store_id']);
                     $response = json_decode($response, 1);
 
                     if (!$response || !empty($response['error'])) {
@@ -314,8 +314,8 @@ class ControllerExtensionPaymentFasterPay extends Controller
             throw new FasterPay\Exception('Invalid Order');
         }
 
-        if ($order['order_status_id'] == self::ORDER_REFUNED_STATUS_ID) {
-            throw new FasterPay\Exception('Order already refuned');
+        if ($order['order_status_id'] == self::ORDER_REFUNDED_STATUS_ID) {
+            throw new FasterPay\Exception('Order already refunded');
         }
 
         if ($order['order_status_id'] != $defaultConfigs['payment_fasterpay_complete_status']) {
