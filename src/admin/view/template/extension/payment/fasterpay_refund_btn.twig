@@ -1,0 +1,38 @@
+<script type="text/javascript">
+	(function($) {
+		$(document).ready(function() {
+			function decodeHtml(html) {
+				return $('<div>').html(html).text();
+			}
+
+			$($('#content .container-fluid > .panel')[0]).find('.panel-body').append('<button type="button" id="refund-btn" class="btn btn-warning pull-right"><i class="fa fa-undo"></i> Refund via FasterPay</button>');
+
+			$('#refund-btn').click(function() {
+				if (!confirm('{{ text_confirm_refund_order }}')) {
+					return;
+				}
+
+				var refund_btn = $(this);
+				var refund_url = '{{ refund_url }}';
+				refund_btn.attr('disabled', 'true');
+
+				$.post(refund_url, { 'order_id': '{{ order_id }}' })
+				.done(function(res) {
+					console.log(res);
+					alert(res.message);
+					if (res.success) {
+						refund_btn.css('display', 'none');
+						location.reload();
+					} else {
+						refund_btn.removeAttr('disabled');
+					}
+				})
+				.fail(function(res) {
+					console.log(res);
+					refund_btn.removeAttr('disabled');
+					alert(res);
+				});
+			});
+		});
+	})(jQuery);
+</script>
