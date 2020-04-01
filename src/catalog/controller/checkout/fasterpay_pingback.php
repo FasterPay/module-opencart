@@ -50,6 +50,17 @@ class ControllerCheckoutFasterPayPingback extends Controller
             $this->getCheckoutOrderModel()->addOrderHistory($order['order_id'], $this->config->get('payment_fasterpay_complete_status'), self::HISTORY_SUCCESS_MESSAGE . $pingbackData['payment_order']['id'], true);
         }
 
+        require_once(DIR_APPLICATION . '/../admin/model/extension/payment/fasterpay_delivery.php');
+        $deliveryModel = new ModelExtensionPaymentFasterPayDelivery($this->registry);
+        $deliveryStatus = ModelExtensionPaymentFasterPayDelivery::STATUS_ORDER_PLACED;
+        if ($deliveryModel->orderIsDownloadable($order)) {
+            $deliveryStatus = ModelExtensionPaymentFasterPayDelivery::STATUS_DELIVERED;
+        }
+        // if ($deliveryModel->orderHasShipping($order)) {
+        //     $deliveryModel->sendDeliveryData($order, $deliveryStatus);
+        // }
+        $deliveryModel->sendDeliveryData($order, $deliveryStatus);
+
         echo self::DEFAULT_PINGBACK_RESPONSE_SUCCESS;
     }
 
@@ -73,5 +84,15 @@ class ControllerCheckoutFasterPayPingback extends Controller
             $this->load->model('checkout/order');
         }
         return $this->model_checkout_order;
+    }
+
+    public function test()
+    {
+        $this->load->model('checkout/order');
+
+        $order = $this->model_checkout_order->getOrder(268);
+        echo "<pre>";
+        print_r($order);
+        echo "</pre>";
     }
 }

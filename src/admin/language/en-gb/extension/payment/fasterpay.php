@@ -11,6 +11,12 @@ $_['text_refund_order_success'] = 'Order refunded successfully!';
 $_['text_refund_order_fail'] = 'Something went wrong!';
 $_['text_fasterpay'] = '<a target="_blank" href="https://www.fasterpay.com/"><img src="view/image/payment/fp_logo_dark.png" alt="Create your FasterPay account" title="Create your FasterPay account" style="max-width: 145px;"/></a>';
 $_['text_pingback_url_hint'] = 'Default Pingback URL:';
+$_['text_courier_name'] = 'Courier';
+$_['text_tracking_number'] = 'Tracking Number';
+$_['text_order_shipment'] = 'Order Shipment';
+$_['text_date_added'] = 'Date Added';
+$_['text_action'] = 'Action';
+$_['text_no_order_shipments'] = 'No order shipments found';
 
 // Entry
 $_['entry_public_key'] = 'Public Key:';

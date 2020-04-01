@@ -1,0 +1,84 @@
+<script id="order_shipment_section_html" type="text/template">
+    <div class="panel panel-default" id="order_shipment_section">
+        <div class="panel-heading">
+            <h3 class="panel-title"><i class="fa fa-truck"></i>{{ text_order_shipment }}</h3>
+        </div>
+        <div class="panel-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <td class="text-left">{{ text_courier_name }}</td>
+                            <td class="text-left">{{ text_tracking_number }}</td>
+                            <td class="text-left" width="100">{{ text_action }}</td>
+                        </tr>
+                    </thead>
+                    <tbody class="shipments">
+                        {% for order_shipment in order_shipments %}
+                        <tr class="shipment">
+                            <td class="text-left">{{ order_shipment.shipping_courier_name }}</td>
+                            <td class="text-left"><a href="{{ track_url }}{{ order_shipment.tracking_number }}" target="_blank">{{ order_shipment.tracking_number }}</a></td>
+                            <td class="text-left"></td>
+                        </tr>
+                        {% endfor %}
+                        <tr id="tracking_form">
+                            <td class="text-left">
+                                <select id="courier_select" class="form-control" required>
+                                    {% for courier in couriers %}
+                                    <option value="{{ courier.shipping_courier_id }}">{{ courier.shipping_courier_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td class="text-left">
+                                <input id="number_input" type="text" class="form-control" required/>
+                            </td>
+                            <td class="text-left">
+                                <button type="button" id="send_data_btn" class="btn btn-primary">
+                                    <i class="fa fa-plus"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</script>
+
+<script type="text/javascript">
+    (function($) {
+        $(document).ready(function() {
+            var order_shipment_html = $('#order_shipment_section_html').html();
+            $($('#content .container-fluid > .panel')[0]).after(order_shipment_html);
+
+            $('#send_data_btn').click(function() {
+                $('#courier_select, #number_input, #send_data_btn').prop('disabled', true);
+                $.post('{{ update_url }}', {
+                    order_id: '{{ order_id }}',
+                    shipping_courier_id: $('#courier_select').val(),
+                    tracking_number: $('#number_input').val()
+                })
+                .done(function(response) {
+                    var data = response.data;
+                    $('#order_shipment_section .shipments .shipment').remove();
+                    for (var shipment of data) {
+                        $('#tracking_form').before(`
+                            <tr class="shipment">
+                                <td class="text-left">${ shipment.shipping_courier_name }</td>
+                                <td class="text-left"><a href="{{ track_url }}${ shipment.tracking_number }" target="_blank">${ shipment.tracking_number }</a></td>
+                                <td class="text-left"></td>
+                            </tr>
+                        `);
+                    }
+                })
+                .fail(function(jqXHR, textStatus, error) {
+                    console.log(error);
+                })
+                .always(function() {
+                    $('#courier_select, #number_input, #send_data_btn').prop('disabled', false);
+                });
+            });
+        });
+    })(jQuery);
+</script>
