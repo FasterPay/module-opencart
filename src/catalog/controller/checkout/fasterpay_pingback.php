@@ -85,14 +85,4 @@ class ControllerCheckoutFasterPayPingback extends Controller
         }
         return $this->model_checkout_order;
     }
-
-    public function test()
-    {
-        $this->load->model('checkout/order');
-
-        $order = $this->model_checkout_order->getOrder(268);
-        echo "<pre>";
-        print_r($order);
-        echo "</pre>";
-    }
 }

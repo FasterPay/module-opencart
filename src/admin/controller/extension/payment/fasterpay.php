@@ -79,6 +79,8 @@ class ControllerExtensionPaymentFasterPay extends Controller
                 $order
                 // && $this->model_extension_payment_fasterpay_delivery->orderHasShipping($order)
                 && !$this->model_extension_payment_fasterpay_delivery->orderIsDownloadable($order)
+                && $order['payment_method'] == self::PAYMENT_METHOD
+                && $order['payment_code'] == strtolower(self::PAYMENT_METHOD)
             ) {
 
                 $this->load->language('extension/payment/fasterpay');
