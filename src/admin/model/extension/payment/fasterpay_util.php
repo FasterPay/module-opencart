@@ -36,21 +36,13 @@ class ModelExtensionPaymentFasterPayUtil extends Model
         return $transactionId;
     }
 
-    public function getOrder($orderId) {
+    public function getOrderDetail($orderId) {
         $order = $this->db->query("SELECT * FROM `" . DB_PREFIX . "order` WHERE order_id = '{$orderId}'")->row;
-        if ($order) {
-            $order['is_downloadable'] = $this->orderIsDownloadable($order);
+        if (empty($order)) {
+            return null;
         }
+        $order['is_downloadable'] = $this->isOrderDownloadable($order['order_id']);
         return $order;
-    }
-
-    public function orderIsDownloadable($order)
-    {
-        if(isset($order['is_downloadable'])) {
-            return $order['is_downloadable'];
-        }
-        $orderId = $order['order_id'];
-        return !!$this->db->query("SELECT count(*) as count FROM `" . DB_PREFIX . "order` o INNER JOIN `" . DB_PREFIX . "order_product` od ON od.order_id = o.order_id INNER JOIN `" . DB_PREFIX . "product_to_download` ptd ON ptd.product_id = od.product_id WHERE o.order_id = '{$orderId}'")->row['count'];
     }
 
     public function getCountryCode($countryId)
@@ -87,7 +79,7 @@ class ModelExtensionPaymentFasterPayUtil extends Model
         return $this->db->getLastId();
     }
 
-    public function getOrderShipment($orderId)
+    public function getActiveOrderShipment($orderId)
     {
         return $this->db->query("SELECT * FROM `" . DB_PREFIX . "order_shipment` WHERE order_id = '{$orderId}' ORDER BY date_added DESC LIMIT 1")->row;
     }
@@ -95,5 +87,11 @@ class ModelExtensionPaymentFasterPayUtil extends Model
     public function getOrderShipments($orderId)
     {
         return $this->db->query("SELECT os.*, sc.shipping_courier_name FROM `" . DB_PREFIX . "order_shipment` os LEFT JOIN `" . DB_PREFIX . "shipping_courier` sc ON sc.shipping_courier_id = os.shipping_courier_id  WHERE order_id = '{$orderId}'")->rows;
+    }
+
+    private function isOrderDownloadable($orderId)
+    {
+        $countDownloadableProduct = $this->db->query("SELECT count(*) as count FROM `" . DB_PREFIX . "order` o INNER JOIN `" . DB_PREFIX . "order_product` od ON od.order_id = o.order_id INNER JOIN `" . DB_PREFIX . "product_to_download` ptd ON ptd.product_id = od.product_id WHERE o.order_id = '{$orderId}'")->row['count'];
+        return !!$countDownloadableProduct;
     }
 }

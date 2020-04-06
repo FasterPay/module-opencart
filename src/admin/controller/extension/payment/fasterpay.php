@@ -72,12 +72,12 @@ class ControllerExtensionPaymentFasterPay extends Controller
             $this->load->model('setting/setting');
 
             $orderId = $this->getGetData('order_id');
-            $order = $this->getUtilModel()->getOrder($orderId);
+            $order = $this->getUtilModel()->getOrderDetail($orderId);
             $body = $this->response->getOutput();
 
             if (
                 $order
-                && !$this->getUtilModel()->orderIsDownloadable($order)
+                && !$order['is_downloadable']
                 && $order['payment_method'] == self::PAYMENT_METHOD
                 && $order['payment_code'] == strtolower(self::PAYMENT_METHOD)
             ) {
@@ -145,7 +145,8 @@ class ControllerExtensionPaymentFasterPay extends Controller
                 $courierId,
                 $trackingNumber
             );
-            $this->getDeliveryModel()->sendDeliveryData($orderId, ModelExtensionPaymentFasterPayDelivery::STATUS_ORDER_SHIPPED);
+            $order = $this->getUtilModel()->getOrderDetail($orderId);
+            $this->getDeliveryModel()->sendDeliveryData($order, ModelExtensionPaymentFasterPayDelivery::STATUS_ORDER_SHIPPED);
             $this->response->addHeader('Content-Type: application/json');
             $this->response->setOutput(json_encode(['data' => $this->getUtilModel()->getOrderShipments($orderId)]));
         }

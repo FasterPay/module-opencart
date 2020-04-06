@@ -55,10 +55,11 @@ class ControllerCheckoutFasterPayPingback extends Controller
         $utilModel = new ModelExtensionPaymentFasterPayUtil($this->registry);
         $deliveryModel = new ModelExtensionPaymentFasterPayDelivery($this->registry);
         $deliveryStatus = ModelExtensionPaymentFasterPayDelivery::STATUS_ORDER_PLACED;
-        if ($utilModel->orderIsDownloadable($order)) {
+        $orderDetail = $utilModel->getOrderDetail($orderId);
+        if ($orderDetail['is_downloadable']) {
             $deliveryStatus = ModelExtensionPaymentFasterPayDelivery::STATUS_DELIVERED;
         }
-        $deliveryModel->sendDeliveryData($order, $deliveryStatus);
+        $deliveryModel->sendDeliveryData($orderDetail, $deliveryStatus);
 
         echo self::DEFAULT_PINGBACK_RESPONSE_SUCCESS;
     }

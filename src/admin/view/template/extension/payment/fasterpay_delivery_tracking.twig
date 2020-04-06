@@ -74,6 +74,7 @@
                             </tr>
                         `);
                     }
+                    $('#tracking_form').trigger('reset');
                 })
                 .fail(function(jqXHR, textStatus, error) {
                     console.log(error);

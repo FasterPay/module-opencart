@@ -7,12 +7,13 @@ class ModelExtensionPaymentFasterPayDelivery extends Model
     const STATUS_DELIVERED = 'delivered';
     const SEVENTEEN_TRACKING_URL = 'https://t.17track.net/en#nums=';
 
-    public function sendDeliveryData($orderId, $status)
+    public function sendDeliveryData($order, $status)
     {
         try {
             $logger = new Log('fasterpay.log');
             $gateway = $this->getUtilModel()->initGateway();
-            $payload = $this->prepareDeliveryData($orderId, $status);
+            $this->validateOrderForDelivery($order);
+            $payload = $this->prepareDeliveryData($order, $status);
 
             $logger->write(json_encode($payload));
 
@@ -36,11 +37,9 @@ class ModelExtensionPaymentFasterPayDelivery extends Model
         return self::SEVENTEEN_TRACKING_URL;
     }
 
-    private function prepareDeliveryData($orderId, $status)
+    private function prepareDeliveryData($order, $status)
     {
-        $order = is_array($orderId) ? $orderId : $this->getUtilModel()->getOrder($orderId);
-        $this->validateOrderForDelivery($order);
-        $trackingData = $this->getUtilModel()->getOrderShipment($order['order_id']);
+        $trackingData = $this->getUtilModel()->getActiveOrderShipment($order['order_id']);
         return [
             "payment_order_id" => $this->getUtilModel()->getTransactionId($order['order_id']),
             "merchant_reference_id" => (string)$order['order_id'],
@@ -64,7 +63,7 @@ class ModelExtensionPaymentFasterPayDelivery extends Model
                 "email" => $order['email']
             ],
             'attachments' => ['N/A'],
-            "type" => !$this->getUtilModel()->orderIsDownloadable($order) ? "physical" : "digital",
+            "type" => !$order['is_downloadable'] ? "physical" : "digital",
             "public_key" => $this->getUtilModel()->initGateway()->getConfig()->getPublicKey(),
         ];
     }
@@ -81,6 +80,7 @@ class ModelExtensionPaymentFasterPayDelivery extends Model
             'shipping_firstname',
             'shipping_lastname',
             'email',
+            'is_downloadable'
         ];
 
         $missingFields = [];
