@@ -4,19 +4,7 @@ require_once DIR_SYSTEM . '/thirdparty/fasterpay-php/lib/autoload.php';
 class ModelExtensionPaymentFasterPayUtil extends Model
 {
     const HISTORY_SUCCESS_MESSAGE = 'Order approved!, Transaction Id: #';
-
-    public function initGateway()
-    {
-        if (empty($this->gateway)) {
-            $this->gateway = new FasterPay\Gateway([
-                'publicKey' => $this->config->get('payment_fasterpay_public_key'),
-                'privateKey' => $this->config->get('payment_fasterpay_private_key'),
-                'isTest' => $this->config->get('payment_fasterpay_test_mode'),
-            ]);
-        }
-
-        return $this->gateway;
-    }
+    const OTHER_COURIER_CODE = 'other';
 
     public function getTransactionId($orderId)
     {
@@ -87,6 +75,15 @@ class ModelExtensionPaymentFasterPayUtil extends Model
     public function getOrderShipments($orderId)
     {
         return $this->db->query("SELECT os.*, sc.shipping_courier_name FROM `" . DB_PREFIX . "order_shipment` os LEFT JOIN `" . DB_PREFIX . "shipping_courier` sc ON sc.shipping_courier_id = os.shipping_courier_id  WHERE order_id = '{$orderId}'")->rows;
+    }
+
+    public function createOtherShippingCourierIfNotExist()
+    {
+        $otherCourier = $this->db->query("SELECT * FROM `" . DB_PREFIX . "shipping_courier` where shipping_courier_code = '" . self::OTHER_COURIER_CODE .  "'")->row;
+
+        if (!$otherCourier) {
+            $this->db->query("INSERT INTO `" . DB_PREFIX . "shipping_courier` (shipping_courier_id, shipping_courier_code, shipping_courier_name) VALUES ((SELECT (MAX(sc.shipping_courier_id) + 1) from `" . DB_PREFIX . "shipping_courier` sc), '" . self::OTHER_COURIER_CODE ."', '" . ucfirst(self::OTHER_COURIER_CODE) ."')");
+        }
     }
 
     private function isOrderDownloadable($orderId)

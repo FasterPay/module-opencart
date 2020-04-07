@@ -31,6 +31,7 @@ class ControllerExtensionPaymentFasterPay extends Controller
         ]);
         $this->model_setting_event->addEvent('fasterpay_add_refund_btn', 'admin/controller/sale/order/info/after', 'extension/payment/fasterpay/addRefundButtonScript');
         $this->model_setting_event->addEvent('fasterpay_add_delivery_tracking', 'admin/controller/sale/order/info/after', 'extension/payment/fasterpay/addDeliveryTrackingSection');
+        $this->getUtilModel()->createOtherShippingCourierIfNotExist();
     }
 
     public function uninstall()
@@ -140,13 +141,17 @@ class ControllerExtensionPaymentFasterPay extends Controller
             $orderId = $this->getPostData('order_id', null);
             $courierId = $this->getPostData('shipping_courier_id', null);
             $trackingNumber = trim($this->getPostData('tracking_number', null));
-            $this->getUtilModel()->createOrderShipment(
-                $orderId,
-                $courierId,
-                $trackingNumber
-            );
-            $order = $this->getUtilModel()->getOrderDetail($orderId);
-            $this->getDeliveryModel()->sendDeliveryData($order, ModelExtensionPaymentFasterPayDelivery::STATUS_ORDER_SHIPPED);
+
+            if (!empty($orderId) && !empty($courierId) && !empty($trackingNumber)) {
+                $this->getUtilModel()->createOrderShipment(
+                    $orderId,
+                    $courierId,
+                    $trackingNumber
+                );
+                $order = $this->getUtilModel()->getOrderDetail($orderId);
+                $this->getDeliveryModel()->sendDeliveryData($order, ModelExtensionPaymentFasterPayDelivery::STATUS_ORDER_SHIPPED);
+            }
+
             $this->response->addHeader('Content-Type: application/json');
             $this->response->setOutput(json_encode(['data' => $this->getUtilModel()->getOrderShipments($orderId)]));
         }

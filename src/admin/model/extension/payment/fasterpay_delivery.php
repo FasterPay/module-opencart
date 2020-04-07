@@ -5,13 +5,14 @@ class ModelExtensionPaymentFasterPayDelivery extends Model
     const STATUS_ORDER_PLACED = 'order_placed';
     const STATUS_ORDER_SHIPPED = 'order_shipped';
     const STATUS_DELIVERED = 'delivered';
+    const SUCCESS_CODE = '00';
     const SEVENTEEN_TRACKING_URL = 'https://t.17track.net/en#nums=';
 
     public function sendDeliveryData($order, $status)
     {
         try {
             $logger = new Log('fasterpay.log');
-            $gateway = $this->getUtilModel()->initGateway();
+            $gateway = $this->getGatewayModel()->initGateway();
             $this->validateOrderForDelivery($order);
             $payload = $this->prepareDeliveryData($order, $status);
 
@@ -26,8 +27,11 @@ class ModelExtensionPaymentFasterPayDelivery extends Model
                     'x-apikey: ' . $gateway->getConfig()->getPrivateKey(),
                 ]
             );
+            $json = $response->getDecodeResponse();
 
-            $logger->write($response->getRawResponse());
+            if (!is_array($json) || !isset($json['code']) || $json['code'] != self::SUCCESS_CODE) {
+                throw new \Exception('Unsuccessful or Invalid response: ' . $response->getRawResponse());
+            }
         } catch (\Exception $e) {
             $logger->write($e->getMessage());
         }
@@ -64,7 +68,7 @@ class ModelExtensionPaymentFasterPayDelivery extends Model
             ],
             'attachments' => ['N/A'],
             "type" => !$order['is_downloadable'] ? "physical" : "digital",
-            "public_key" => $this->getUtilModel()->initGateway()->getConfig()->getPublicKey(),
+            "public_key" => $this->getGatewayModel()->initGateway()->getConfig()->getPublicKey(),
         ];
     }
 
@@ -91,6 +95,15 @@ class ModelExtensionPaymentFasterPayDelivery extends Model
             $this->model_extension_payment_fasterpay_util = new ModelExtensionPaymentFasterPayUtil($this->registry);
         }
         return $this->model_extension_payment_fasterpay_util;
+    }
+
+    private function getGatewayModel()
+    {
+        if (!$this->model_extension_payment_fasterpay) {
+            require_once(__DIR__ . '/fasterpay.php');
+            $this->model_extension_payment_fasterpay = new ModelExtensionPaymentFasterPay($this->registry);
+        }
+        return $this->model_extension_payment_fasterpay;
     }
 
     private static function getRequiredFieldsForDelivery()
