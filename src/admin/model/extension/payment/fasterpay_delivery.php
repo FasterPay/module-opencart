@@ -16,8 +16,6 @@ class ModelExtensionPaymentFasterPayDelivery extends Model
             $this->validateOrderForDelivery($order);
             $payload = $this->prepareDeliveryData($order, $status);
 
-            $logger->write(json_encode($payload));
-
             $response = $gateway->callApi(
                 'api/v1/deliveries',
                 $payload,
@@ -30,7 +28,8 @@ class ModelExtensionPaymentFasterPayDelivery extends Model
             $json = $response->getDecodeResponse();
 
             if (!is_array($json) || !isset($json['code']) || $json['code'] != self::SUCCESS_CODE) {
-                throw new \Exception('Unsuccessful or Invalid response: ' . $response->getRawResponse());
+                $logger->write('Request: ' . json_encode($payload));
+                $logger->write('Response: ' . $response->getRawResponse());
             }
         } catch (\Exception $e) {
             $logger->write($e->getMessage());
