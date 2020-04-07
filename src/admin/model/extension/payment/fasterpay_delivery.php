@@ -70,19 +70,7 @@ class ModelExtensionPaymentFasterPayDelivery extends Model
 
     private function validateOrderForDelivery($order)
     {
-        $requiredFields = [
-            'order_id',
-            'shipping_city',
-            'shipping_postcode',
-            'shipping_zone',
-            'shipping_address_1',
-            'telephone',
-            'shipping_firstname',
-            'shipping_lastname',
-            'email',
-            'is_downloadable'
-        ];
-
+        $requiredFields = self::getRequiredFieldsForDelivery();
         $missingFields = [];
 
         foreach ($requiredFields as $field) {
@@ -103,5 +91,31 @@ class ModelExtensionPaymentFasterPayDelivery extends Model
             $this->model_extension_payment_fasterpay_util = new ModelExtensionPaymentFasterPayUtil($this->registry);
         }
         return $this->model_extension_payment_fasterpay_util;
+    }
+
+    private static function getRequiredFieldsForDelivery()
+    {
+        return [
+            'order_id',
+            'shipping_country_id',
+            'payment_country_id',
+            'shipping_city',
+            'payment_city',
+            'shipping_postcode',
+            'payment_postcode',
+            'shipping_zone',
+            'payment_zone',
+            'shipping_address_1',
+            'payment_address_1',
+            'telephone',
+            'shipping_firstname',
+            'payment_firstname',
+            'firstname',
+            'shipping_lastname',
+            'payment_lastname',
+            'lastname',
+            'email',
+            'is_downloadable'
+        ];
     }
 }
