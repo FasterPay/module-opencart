@@ -8,18 +8,14 @@ class ModelExtensionPaymentFasterPayUtil extends Model
 
     public function getTransactionId($orderId)
     {
-        $query = $this->db->query('SELECT * FROM '.DB_PREFIX."order_history WHERE `comment` LIKE '".self::HISTORY_SUCCESS_MESSAGE."%'  AND `order_id` = ".$orderId.' ORDER BY `date_added` DESC LIMIT 1');
+        $query = $this->db->query('SELECT * FROM ' . DB_PREFIX . "order_history WHERE `comment` LIKE '".self::HISTORY_SUCCESS_MESSAGE."%'  AND `order_id` = ".$orderId.' ORDER BY `date_added` DESC LIMIT 1');
 
         if (empty($query->rows)) {
             return false;
         }
 
         $comment = $query->rows[0]['comment'];
-        $transactionId = trim(str_replace(self::HISTORY_SUCCESS_MESSAGE, '', $comment));
-
-        if (!is_numeric($transactionId)) {
-            return false;
-        }
+        $transactionId = $this->getTransactionIdFromSuccessMessage($comment);
 
         return $transactionId;
     }
@@ -36,7 +32,7 @@ class ModelExtensionPaymentFasterPayUtil extends Model
     public function getCountryCode($countryId)
     {
         $country = $this->getCountry($countryId);
-        return $country ? $country['iso_code_2'] : false;
+        return !empty($country['iso_code_2']) ? $country['iso_code_2'] : false;
     }
 
     public function getCountry($countryId)
@@ -52,7 +48,7 @@ class ModelExtensionPaymentFasterPayUtil extends Model
     public function getShippingCourierCode($courierId)
     {
         $courier = $this->getShippingCourier($courierId);
-        return $courier ? $courier['shipping_courier_code'] : false;
+        return !empty($courier['shipping_courier_code']) ? $courier['shipping_courier_code'] : false;
     }
 
     public function getShippingCourier($courierId)
@@ -84,6 +80,20 @@ class ModelExtensionPaymentFasterPayUtil extends Model
         if (!$otherCourier) {
             $this->db->query("INSERT INTO `" . DB_PREFIX . "shipping_courier` (shipping_courier_id, shipping_courier_code, shipping_courier_name) VALUES ((SELECT (MAX(sc.shipping_courier_id) + 1) from `" . DB_PREFIX . "shipping_courier` sc), '" . self::OTHER_COURIER_CODE ."', '" . ucfirst(self::OTHER_COURIER_CODE) ."')");
         }
+    }
+
+    public function generateSuccessMessage($transactionId)
+    {
+        return self::HISTORY_SUCCESS_MESSAGE . $transactionId;
+    }
+
+    public function getTransactionIdFromSuccessMessage($message)
+    {
+        $transactionId = trim(str_replace(self::HISTORY_SUCCESS_MESSAGE, '', $message));
+        if (!is_numeric($transactionId)) {
+            return false;
+        }
+        return $transactionId;
     }
 
     private function isOrderDownloadable($orderId)
