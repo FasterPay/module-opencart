@@ -4,7 +4,6 @@ class ControllerCheckoutFasterPayPingback extends Controller
 {
     const DEFAULT_PINGBACK_RESPONSE_SUCCESS = "OK";
     const PAYMENT_METHOD = 'FasterPay';
-    const HISTORY_SUCCESS_MESSAGE = 'Order approved!, Transaction Id: #';
     const FASTERPAY_EVENT_PAYMENT = 'payment';
 
     public function index()
@@ -46,9 +45,26 @@ class ControllerCheckoutFasterPayPingback extends Controller
             $this->getCheckoutOrderModel()->addOrderHistory($order['order_id'], $defaultConfigs['payment_fasterpay_complete_status'], '', true);
         }
 
+        require_once(DIR_APPLICATION . '/../admin/model/extension/payment/fasterpay_util.php');
+        $utilModel = new ModelExtensionPaymentFasterPayUtil($this->registry);
+
         if ($order['order_status_id'] != $this->config->get('payment_fasterpay_complete_status')) {
-            $this->getCheckoutOrderModel()->addOrderHistory($order['order_id'], $this->config->get('payment_fasterpay_complete_status'), self::HISTORY_SUCCESS_MESSAGE . $pingbackData['payment_order']['id'], true);
+            $this->getCheckoutOrderModel()->addOrderHistory(
+                $order['order_id'],
+                $this->config->get('payment_fasterpay_complete_status'),
+                $utilModel->generateSuccessMessage($pingbackData['payment_order']['id']),
+                true
+            );
         }
+
+        require_once(DIR_APPLICATION . '/../admin/model/extension/payment/fasterpay_delivery.php');
+        $deliveryModel = new ModelExtensionPaymentFasterPayDelivery($this->registry);
+        $deliveryStatus = ModelExtensionPaymentFasterPayDelivery::STATUS_ORDER_PLACED;
+        $orderDetail = $utilModel->getOrderDetail($orderId);
+        if ($orderDetail['is_downloadable']) {
+            $deliveryStatus = ModelExtensionPaymentFasterPayDelivery::STATUS_DELIVERED;
+        }
+        $deliveryModel->sendDeliveryData($orderDetail, $deliveryStatus);
 
         echo self::DEFAULT_PINGBACK_RESPONSE_SUCCESS;
     }
