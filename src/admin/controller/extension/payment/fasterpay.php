@@ -2,7 +2,7 @@
 /*
  * Module Name: FasterPay for OpenCart
  * Description: Official FasterPay module for OpenCart
- * Version: 1.1.0
+ * Version: 1.2.0
  * Author: The FasterPay Team
  * Author URI: https://www.fasterpay.com/
  * License: The MIT License (MIT)
@@ -30,6 +30,8 @@ class ControllerExtensionPaymentFasterPay extends Controller
             'payment_fasterpay_pingback_url' => ''
         ]);
         $this->model_setting_event->addEvent('fasterpay_add_refund_btn', 'admin/controller/sale/order/info/after', 'extension/payment/fasterpay/addRefundButtonScript');
+        $this->model_setting_event->addEvent('fasterpay_add_delivery_tracking', 'admin/controller/sale/order/info/after', 'extension/payment/fasterpay/addDeliveryTrackingSection');
+        $this->getUtilModel()->createOtherShippingCourierIfNotExist();
     }
 
     public function uninstall()
@@ -38,6 +40,7 @@ class ControllerExtensionPaymentFasterPay extends Controller
         $this->load->model('setting/event');
         $this->model_setting_setting->deleteSetting('payment_fasterpay');
         $this->model_setting_event->deleteEventByCode('fasterpay_add_refund_btn');
+        $this->model_setting_event->deleteEventByCode('fasterpay_add_delivery_tracking');
     }
 
     /**
@@ -60,6 +63,45 @@ class ControllerExtensionPaymentFasterPay extends Controller
         $data = array_merge($translationData, $viewData);
 
         $this->response->setOutput($this->load->view('extension/payment/fasterpay', $data));
+    }
+
+    // admin/controller/sale/order/info/after
+    public function addDeliveryTrackingSection()
+    {
+        if ($this->request->server['REQUEST_METHOD'] == 'GET') {
+            $this->load->model('extension/payment/fasterpay_delivery');
+            $this->load->model('setting/setting');
+
+            $orderId = $this->getGetData('order_id');
+            $order = $this->getUtilModel()->getOrderDetail($orderId);
+            $body = $this->response->getOutput();
+
+            if (
+                $order
+                && !$order['is_downloadable']
+                && $order['payment_method'] == self::PAYMENT_METHOD
+                && $order['payment_code'] == strtolower(self::PAYMENT_METHOD)
+            ) {
+
+                $this->load->language('extension/payment/fasterpay');
+
+                $data = [
+                    'order_id' => $orderId,
+                    'update_url' => str_replace('&amp;', '&', $this->url->link('extension/payment/fasterpay/delivery', 'user_token=' . $this->session->data['user_token'])),
+                    'text_courier_name' => $this->language->get('text_courier_name'),
+                    'text_tracking_number' => $this->language->get('text_tracking_number'),
+                    'text_order_shipment' => $this->language->get('text_order_shipment'),
+                    'text_date_added' => $this->language->get('text_date_added'),
+                    'text_action' => $this->language->get('text_action'),
+                    'text_no_order_shipments' => $this->language->get('text_no_order_shipments'),
+                    'order_shipments' => $this->getUtilModel()->getOrderShipments($orderId),
+                    'couriers' => $this->getUtilModel()->getShipmentCouriers(),
+                    'track_url' => ModelExtensionPaymentFasterPayDelivery::getDefaultDeliveryTrackingUrl(),
+                ];
+                $body .= $this->load->view('extension/payment/fasterpay_delivery_tracking', $data);
+                $this->response->setOutput($body);
+            }
+        }
     }
 
     // admin/controller/sale/order/info/after
@@ -90,6 +132,28 @@ class ControllerExtensionPaymentFasterPay extends Controller
                 $body .= $this->load->view('extension/payment/fasterpay_refund_btn', $data);
                 $this->response->setOutput($body);
             }
+        }
+    }
+
+    public function delivery()
+    {
+        if ($this->request->server['REQUEST_METHOD'] == 'POST') {
+            $orderId = $this->getPostData('order_id', null);
+            $courierId = $this->getPostData('shipping_courier_id', null);
+            $trackingNumber = trim($this->getPostData('tracking_number', null));
+
+            if (!empty($orderId) && !empty($courierId) && !empty($trackingNumber)) {
+                $this->getUtilModel()->createOrderShipment(
+                    $orderId,
+                    $courierId,
+                    $trackingNumber
+                );
+                $order = $this->getUtilModel()->getOrderDetail($orderId);
+                $this->getDeliveryModel()->sendDeliveryData($order, ModelExtensionPaymentFasterPayDelivery::STATUS_ORDER_SHIPPED);
+            }
+
+            $this->response->addHeader('Content-Type: application/json');
+            $this->response->setOutput(json_encode(['data' => $this->getUtilModel()->getOrderShipments($orderId)]));
         }
     }
 
@@ -347,5 +411,21 @@ class ControllerExtensionPaymentFasterPay extends Controller
         curl_close($curl);
 
         return $res;
+    }
+
+    private function getUtilModel()
+    {
+        if (!$this->model_extension_payment_fasterpay_util) {
+            $this->load->model('extension/payment/fasterpay_util');
+        }
+        return $this->model_extension_payment_fasterpay_util;
+    }
+
+    private function getDeliveryModel()
+    {
+        if (!$this->model_extension_payment_fasterpay_delivery) {
+            $this->load->model('extension/payment/fasterpay_delivery');
+        }
+        return $this->model_extension_payment_fasterpay_delivery;
     }
 }
