@@ -2,7 +2,7 @@
 /*
  * Module Name: FasterPay for OpenCart
  * Description: Official FasterPay module for OpenCart
- * Version: 1.2.0
+ * Version: 1.2.1
  * Author: The FasterPay Team
  * Author URI: https://www.fasterpay.com/
  * License: The MIT License (MIT)
