@@ -28,8 +28,8 @@ class ControllerExtensionPaymentFasterPay extends Controller
         }
 
         $orderInfo = $this->model_checkout_order->getOrder($this->session->data['order_id']);
-        
-        $orderInfo['total'] = $this->currency->format($orderInfo['total'], $orderInfo['currency_code']);
+
+        $orderInfo['total'] = $this->currency->format($orderInfo['total'], $orderInfo['currency_code'], '', false);
 
         $this->cart->clear();
         unset($this->session->data['order_id']);
